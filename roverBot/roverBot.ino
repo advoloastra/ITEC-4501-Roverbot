@@ -8,8 +8,8 @@
  *   
  *
  * Created August 28th, 2014
- * Updated September 17th, 2014
- * v0.7.1
+ * Updated October 17th, 2014
+ * v0.7.2
  
 
 Required connections between Arduino Mega and qik 2s9v1:
@@ -31,7 +31,7 @@ Sonar Connections:  Trigger  Echo
 ---------------------------------
 
 Sonar 0 - Left          24      25
-Sonar 1 - Center 	22      23
+Sonar 1 - Center 		22      23
 Sonar 2 - Right         26      27
 
 
@@ -140,11 +140,11 @@ unsigned int cm[SONAR_NUM];         // Where distance data is stored.
 boolean bSensor[SONAR_NUM];         // Where sensor status is stored.
 uint8_t currentSensor = 0;          // Keeps track of which sensor is active.
 enum state_t { stateStopped, stateMoving, stateTurning, stateBackward, stateRemote };
-state_t state;
+state_t state; // declare states
 unsigned long endStateTime;
-MovingAverage<unsigned int, 3> distanceAverageRight;
-MovingAverage<unsigned int, 3> distanceAverageLeft;
-int lastTurn;
+MovingAverage<unsigned int, 3> distanceAverageRight; //create averaging object for IR distance
+MovingAverage<unsigned int, 3> distanceAverageLeft; //create averaging object for IR distance
+int lastTurn; //keep track of last turn for corner oscillation algorithm
 
 NewPing sonar[SONAR_NUM] = {     // Sensor object array.
   NewPing(24, 25, MAX_DISTANCE), // Each sensor's trigger pin, echo pin, and max distance to ping.
@@ -157,23 +157,22 @@ void setup() {
     pingTimer[0] = millis() + 75;           // First ping starts at 75ms, gives time for the Arduino to chill before starting.
     for (uint8_t i = 1; i < SONAR_NUM; i++) // Set the starting time for each sensor.
       pingTimer[i] = pingTimer[i - 1] + PING_INTERVAL;
-    qik.init();
+    qik.init();  //initialize the Pololu qik motor controller
     randomSeed(analogRead(RANDOM_ANALOG_PIN));
-    pinMode(rxPin, INPUT);
+    pinMode(rxPin, INPUT);  //Set pins to input or output
     pinMode(txPin, OUTPUT);
     pinMode(irRight, INPUT);
     pinMode(irLeft, INPUT);
 	
-    //Servo driver setup
+    //Servo driver initialization
     int degrees;
     pwm.begin();
     pwm.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
 	
         
 
- #ifdef ENABLE_EMIC2   
-    // set the data rate for the SoftwareSerial port
-    emicSerial.begin(9600);
+ #ifdef ENABLE_EMIC2 //Emic 2 text to speech initialization  
+    emicSerial.begin(9600); // set the data rate for the SoftwareSerial port
     
     emic2TtsModule.init();
     emic2TtsModule.setVolume(18);
@@ -188,7 +187,7 @@ void setup() {
     while (emicSerial.read() != ':');   // Wait here until the Emic 2 responds with a ":" indicating it's ready to accept the next command
  #endif
  
- #ifdef ENABLE_EMIC2 && #ifdef ENABLE_SERVO_DRIVER
+ #ifdef ENABLE_EMIC2 && #ifdef ENABLE_SERVO_DRIVER //speaking and arm movement code
     sdAttention();
     emicSerial.print('S');
     emicSerial.print("Extend my arm to you. ");  // Send the desired string to convert to speech
@@ -216,7 +215,7 @@ void setup() {
     
     sdAttention();
     emicSerial.print('S');
-    emicSerial.print("Try to fli. by flapping my arms. ");  // Send the desired string to convert to speech
+    emicSerial.print("Try to fli like a bird. by flapping my arms. ");  // Send the desired string to convert to speech
     emicSerial.print('\n');
     while (emicSerial.read() != ':');
     for (int i = 0; i <= 4; i++)
@@ -298,7 +297,7 @@ void loop() {
   unsigned long currentTime = millis();
   
   if (moving()){
-    double irDistanceLeft = distanceAverageLeft.add(getDistance(irLeft));
+    double irDistanceLeft = distanceAverageLeft.add(getDistance(irLeft)); // get IR distance
     double irDistanceRight = distanceAverageRight.add(getDistance(irRight));
     
     //Serial.print(irDistanceLeft);
@@ -306,15 +305,11 @@ void loop() {
     //Serial.print(irDistanceRight);
     //Serial.println();
     
-      if (irDistanceLeft < 14 || irDistanceRight < 14){
+      if (irDistanceLeft < 14 || irDistanceRight < 14){ //If IR fires (too close)
         stop();
         moveBackward(currentTime, BACKUP_TIME);
       }
-        
-      //if (irDistanceRight < 14){
-        //stop();
-        //moveBackward(currentTime, BACKUP_TIME);
-      //}   
+         
 
   }	
   else if (turning()){
@@ -323,7 +318,7 @@ void loop() {
   }
   else if (backward()){
     if (doneBackward(currentTime))
-		if (lastTurn == LEFT)
+		if (lastTurn == LEFT) // prevent corner oscillation
 			turnLeft(currentTime, IR_TURN);
 			else if (lastTurn == RIGHT)
 				turnRight(currentTime, IR_TURN);
@@ -400,10 +395,6 @@ void stop()
   state = stateStopped;
 }
 
-//bool obstacleAhead(unsigned int distance)
-//{
-    //return (distance <= TOO_CLOSE);
-//}
 
 bool turnRight(unsigned long currentTime, int degrees)
 {
@@ -506,7 +497,7 @@ void sdFlapArms(){
     pwm.setPWM(2, 0, map(80, 0, 180, SERVOMIN, SERVOMAX));
     pwm.setPWM(3, 0, map(0, 0, 180, SERVOMIN, SERVOMAX));
     
-    for (int degrees = 90; degrees <= 180; degrees++)
+    for (int degrees = 90; degrees <= 180; degrees++) //flap motion
     pwm.setPWM(4, 0, map(degrees, 0, 180, SERVOMIN, SERVOMAX));
     
     for (int degrees = 90; degrees >= 0; degrees--)
@@ -581,7 +572,7 @@ void sdWaveHandRight(){
     pwm.setPWM(8, 0, map(0, 0, 180, SERVOMIN, SERVOMAX));
     pwm.setPWM(10, 0, map(180, 0, 180, SERVOMIN, SERVOMAX));
     
-    for (int degrees = 60; degrees <= 110; degrees++)
+    for (int degrees = 60; degrees <= 110; degrees++) //Wave hand
     pwm.setPWM(9, 0, map(degrees, 0, 180, SERVOMIN, SERVOMAX));
     delay(1000);
     for (int degrees = 110; degrees >= 60; degrees--)
@@ -621,7 +612,7 @@ void sdShakeHand(){
     pwm.setPWM(7, 0, map(135, 0, 180, SERVOMIN, SERVOMAX));
     pwm.setPWM(8, 0, map(90, 0, 180, SERVOMIN, SERVOMAX));
     
-    for (int degrees = 80; degrees <= 100; degrees++)
+    for (int degrees = 80; degrees <= 100; degrees++) //move arm
     pwm.setPWM(8, 0, map(degrees, 0, 180, SERVOMIN, SERVOMAX));
     delay(1000);
     for (int degrees = 100; degrees >= 80; degrees--)
@@ -638,7 +629,6 @@ void sdShakeHand(){
 void sdBow(){
     pwm.setPWM(0, 0, map(75, 0, 180, SERVOMIN, SERVOMAX));
     pwm.setPWM(1, 0, map(90, 0, 180, SERVOMIN, SERVOMAX));
-    pwm.setPWM(2, 0, map(180, 0, 180, SERVOMIN, SERVOMAX)); //bow forward
     pwm.setPWM(3, 0, map(0, 0, 180, SERVOMIN, SERVOMAX));
     pwm.setPWM(4, 0, map(91, 0, 180, SERVOMIN, SERVOMAX));
     pwm.setPWM(5, 0, map(90, 0, 180, SERVOMIN, SERVOMAX));
@@ -646,6 +636,7 @@ void sdBow(){
     pwm.setPWM(7, 0, map(135, 0, 180, SERVOMIN, SERVOMAX));
     pwm.setPWM(8, 0, map(120, 0, 180, SERVOMIN, SERVOMAX)); //right arm forward
     pwm.setPWM(9, 0, map(100, 0, 180, SERVOMIN, SERVOMAX)); //right arm to chest
+	pwm.setPWM(2, 0, map(180, 0, 180, SERVOMIN, SERVOMAX)); //bow forward
     pwm.setPWM(10, 0, map(90, 0, 180, SERVOMIN, SERVOMAX));
     pwm.setPWM(11, 0, map(90, 0, 180, SERVOMIN, SERVOMAX));
     pwm.setPWM(12, 0, map(45, 0, 180, SERVOMIN, SERVOMAX));
