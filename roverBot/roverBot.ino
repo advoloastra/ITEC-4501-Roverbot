@@ -628,19 +628,19 @@ void sdShakeHand(){
 
 void sdBow(){
     pwm.setPWM(0, 0, map(75, 0, 180, SERVOMIN, SERVOMAX));
-    pwm.setPWM(1, 0, map(90, 0, 180, SERVOMIN, SERVOMAX));
+    pwm.setPWM(1, 0, map(100, 0, 180, SERVOMIN, SERVOMAX));
     pwm.setPWM(3, 0, map(0, 0, 180, SERVOMIN, SERVOMAX));
-    pwm.setPWM(4, 0, map(91, 0, 180, SERVOMIN, SERVOMAX));
-    pwm.setPWM(5, 0, map(90, 0, 180, SERVOMIN, SERVOMAX));
+    pwm.setPWM(4, 0, map(65, 0, 180, SERVOMIN, SERVOMAX));
+    pwm.setPWM(5, 0, map(35, 0, 180, SERVOMIN, SERVOMAX));
     pwm.setPWM(6, 0, map(176, 0, 180, SERVOMIN, SERVOMAX));
     pwm.setPWM(7, 0, map(135, 0, 180, SERVOMIN, SERVOMAX));
     pwm.setPWM(8, 0, map(120, 0, 180, SERVOMIN, SERVOMAX)); //right arm forward
-    pwm.setPWM(9, 0, map(100, 0, 180, SERVOMIN, SERVOMAX)); //right arm to chest
-	pwm.setPWM(2, 0, map(180, 0, 180, SERVOMIN, SERVOMAX)); //bow forward
+    pwm.setPWM(9, 0, map(170, 0, 180, SERVOMIN, SERVOMAX)); //right arm to chest
     pwm.setPWM(10, 0, map(90, 0, 180, SERVOMIN, SERVOMAX));
     pwm.setPWM(11, 0, map(90, 0, 180, SERVOMIN, SERVOMAX));
     pwm.setPWM(12, 0, map(45, 0, 180, SERVOMIN, SERVOMAX));
     pwm.setPWM(13, 0, map(90, 0, 180, SERVOMIN, SERVOMAX));
+    pwm.setPWM(2, 0, map(125, 0, 180, SERVOMIN, SERVOMAX)); //bow forward
 }
 
 bool moving() { return (state == stateMoving); }
